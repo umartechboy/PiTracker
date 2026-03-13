@@ -36,6 +36,8 @@
             frameC = new PictureBox();
             seekbarC = new TrackBar();
             playedC = new CheckBox();
+            consoleC = new TextBox();
+            hoverCoordsC = new Label();
             ((System.ComponentModel.ISupportInitialize)frameC).BeginInit();
             ((System.ComponentModel.ISupportInitialize)seekbarC).BeginInit();
             SuspendLayout();
@@ -100,34 +102,55 @@
             frameC.BackgroundImageLayout = ImageLayout.Zoom;
             frameC.Location = new Point(12, 83);
             frameC.Name = "frameC";
-            frameC.Size = new Size(504, 234);
+            frameC.Size = new Size(746, 472);
             frameC.TabIndex = 3;
             frameC.TabStop = false;
+            frameC.MouseMove += frameC_MouseMove;
             // 
             // seekbarC
             // 
             seekbarC.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            seekbarC.Location = new Point(12, 323);
+            seekbarC.Location = new Point(12, 561);
             seekbarC.Name = "seekbarC";
-            seekbarC.Size = new Size(480, 45);
+            seekbarC.Size = new Size(731, 45);
             seekbarC.TabIndex = 4;
             // 
             // playedC
             // 
+            playedC.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             playedC.AutoSize = true;
             playedC.Checked = true;
             playedC.CheckState = CheckState.Checked;
-            playedC.Location = new Point(502, 329);
+            playedC.Location = new Point(743, 561);
             playedC.Name = "playedC";
             playedC.Size = new Size(15, 14);
             playedC.TabIndex = 5;
             playedC.UseVisualStyleBackColor = true;
             // 
+            // consoleC
+            // 
+            consoleC.Location = new Point(764, 83);
+            consoleC.Multiline = true;
+            consoleC.Name = "consoleC";
+            consoleC.Size = new Size(166, 502);
+            consoleC.TabIndex = 6;
+            // 
+            // hoverCoordsC
+            // 
+            hoverCoordsC.Location = new Point(651, 59);
+            hoverCoordsC.Name = "hoverCoordsC";
+            hoverCoordsC.Size = new Size(107, 21);
+            hoverCoordsC.TabIndex = 7;
+            hoverCoordsC.Text = "--";
+            hoverCoordsC.TextAlign = ContentAlignment.BottomRight;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(528, 359);
+            ClientSize = new Size(942, 597);
+            Controls.Add(hoverCoordsC);
+            Controls.Add(consoleC);
             Controls.Add(playedC);
             Controls.Add(seekbarC);
             Controls.Add(frameC);
@@ -155,5 +178,7 @@
         private PictureBox frameC;
         private TrackBar seekbarC;
         private CheckBox playedC;
+        private TextBox consoleC;
+        private Label hoverCoordsC;
     }
 }

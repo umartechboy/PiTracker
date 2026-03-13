@@ -28,6 +28,7 @@ namespace PITrackerCore
                     {
                         // Process the frame and generate debug frames and track output
                         // For demonstration, we'll just create dummy data
+                        // user will dispose after usage
                         OnDebugFrame?.Invoke(new DebugFrame { Frame = frame, Label = "got a frame" });
                     }
                 }

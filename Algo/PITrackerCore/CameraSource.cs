@@ -77,10 +77,20 @@ namespace PITrackerCore
                 {
                     if (_frame == null)
                         _frame = Cv2.ImRead(Filename);
+                    if (_frame.IsDisposed)
+                        _frame = Cv2.ImRead(Filename);
                     return _frame;
                 }
+                private set => _frame = value;
             }
 
+            public void ClearCache()
+            {
+                if (Frame == null)
+                    return;
+                Frame.Dispose();
+                Frame = null;
+            }
         }
         public FileFrame[] Files;
         private int currentIndex = 0;
@@ -128,11 +138,12 @@ namespace PITrackerCore
             var f = Files[currentIndex].Frame;
             if (AutoIncrement)
             {
+                // dispose the last cache
                 currentIndex++;
+                if (currentIndex >= Files.Length)
+                    currentIndex = 0; // Loop back to the beginning
                 OnIndexChanged?.Invoke(currentIndex, 0, Files.Length - 1);
             }
-            if (currentIndex >= Files.Length)
-                currentIndex = 0; // Loop back to the beginning
             return f;
         }
 
