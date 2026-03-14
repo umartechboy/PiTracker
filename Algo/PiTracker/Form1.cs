@@ -86,11 +86,11 @@ namespace PiTracker
                 int rw = (int)Math.Min(frame.Frame.Width - rx, t.W);
                 int rh = (int)Math.Min(frame.Frame.Height - ry, t.H);
 
-                if (rw > 0 && rh > 0)
-                {
-                    using OpenCvSharp.Mat objMat = frame.Frame[new OpenCvSharp.Rect(rx, ry, rw, rh)];
-                    InstantDebugObject(objMat, "TrackedObject");
-                }
+                //if (rw > 0 && rh > 0)
+                //{
+                //    using OpenCvSharp.Mat objMat = frame.Frame[new OpenCvSharp.Rect(rx, ry, rw, rh)];
+                //    InstantDebugObject(objMat, "TrackedObject");
+                //}
             }
             else
             {
@@ -123,8 +123,8 @@ namespace PiTracker
 
     private void PiTracker_OnMicroDebug(Tracker.DebugFrame frame)
     {
-        InstantDebugObject(frame.Frame, frame.Label);
-        frame.Frame.Dispose();
+        //InstantDebugObject(frame.Frame, frame.Label);
+        //frame.Frame.Dispose();
     }
         private void PiTracker_OnTrackOutput(Tracker.TrackData output)
         {

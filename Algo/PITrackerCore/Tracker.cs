@@ -44,12 +44,22 @@ namespace PITrackerCore
 
         private Mat DrawDebugFrame(Mat frame, LockParameters prev, LockParameters current)
         {
-            if (prev != null)
-            {
-                Cv2.Rectangle(frame, new Rect((int)prev.X, (int)prev.Y, (int)prev.W, (int)prev.H), Scalar.Gray, 1);
-            }
+            // if (prev != null)
+            // {
+            //     Cv2.Rectangle(frame, new Rect((int)prev.X, (int)prev.Y, (int)prev.W, (int)prev.H), Scalar.Gray, 1);
+            // }
             if (current != null && current.IsLocked)
             {
+                if (prev != null)
+                {
+                    // ROI Rect (Centered on previous known position, matching TryLock logic)
+                    int rx = (int)Math.Max(0, (prev.X + prev.W / 2) - (prev.W / 2 + current.RoiOffsetX));
+                    int ry = (int)Math.Max(0, (prev.Y + prev.H / 2) - (prev.H / 2 + current.RoiOffsetY));
+                    int rw = (int)Math.Min(frame.Width - rx, (int)prev.W + (current.RoiOffsetX * 2));
+                    int rh = (int)Math.Min(frame.Height - ry, (int)prev.H + (current.RoiOffsetY * 2));
+                    Cv2.Rectangle(frame, new Rect(rx, ry, rw, rh), Scalar.Yellow, 1);
+                }
+
                 Cv2.Rectangle(frame, new Rect((int)current.X, (int)current.Y, (int)current.W, (int)current.H), Scalar.Green, 2);
                 Cv2.PutText(frame, $"Conf: {current.Confidence:F2}", new OpenCvSharp.Point((int)current.X, (int)current.Y - 5), HersheyFonts.HersheySimplex, 0.5, Scalar.Green, 1);
             }
@@ -126,16 +136,16 @@ namespace PITrackerCore
             int predTravelY = (int)(Math.Abs(last.dY) * cfg.MarginFactor);
 
             // Integrate ROI Offset: Average last offset with predicted travel requirements
-            int newOffsetX = (int)((last.RoiOffsetX * 0.5) + (predTravelX * 0.5));
-            int newOffsetY = (int)((last.RoiOffsetY * 0.5) + (predTravelY * 0.5));
+            int newOffsetX = (int)((last.RoiOffsetX * 0.8) + (predTravelX * 0.2));
+            int newOffsetY = (int)((last.RoiOffsetY * 0.8) + (predTravelY * 0.2));
             
             // Clamp to Process Controls
             newOffsetX = Math.Clamp(newOffsetX, cfg.MinROI, cfg.MaxROI);
             newOffsetY = Math.Clamp(newOffsetY, cfg.MinROI, cfg.MaxROI);
 
             // Define ROI Rect (Centered on last known position)
-            int rx = (int)Math.Max(0, (last.X + last.W/2) - (last.W/2 + newOffsetX));
-            int ry = (int)Math.Max(0, (last.Y + last.H/2) - (last.H/2 + newOffsetY));
+            int rx = (int)Math.Max(0, last.X + last.W/2) - (last.W/2 + newOffsetX));
+            int ry = (int)Math.Max(0, last.Y + last.H/2) - (last.H/2 + newOffsetY));
             int rw = (int)Math.Min(frame.Width - rx, (int)last.W + (newOffsetX * 2));
             int rh = (int)Math.Min(frame.Height - ry, (int)last.H + (newOffsetY * 2));
 
@@ -146,7 +156,7 @@ namespace PITrackerCore
 
             // --- STEP 2: THRESHOLDING ---
             // Get fresh threshold from Histogram
-            int frameThreshold = GetHistogramThreshold_Traveler(roiGray, cfg);
+            int frameThreshold = GetHistogramThreshold(roiGray, cfg);
             int activeThreshold = last.IsManual ? frameThreshold : (int)((last.BinaryThreshold * cfg.ThresholdWeight) + (frameThreshold * (1 - cfg.ThresholdWeight)));
 
             using Mat binary = new Mat();
@@ -173,16 +183,16 @@ namespace PITrackerCore
             double curX = rx + medianX - (measuredRect.Width / 2.0);
             double curY = ry + medianY - (measuredRect.Height / 2.0);
             
-            double curDX = curX - last.X;
-            double curDY = curY - last.Y;
-            double curDW = measuredRect.Width - last.W;
-            double curDH = measuredRect.Height - last.H;
+            double curDX = last.IsManual ? 0 : curX - last.X;
+            double curDY = last.IsManual ? 0 : curY - last.Y;
+            double curDW = last.IsManual ? 0 : measuredRect.Width - last.W;
+            double curDH = last.IsManual ? 0 : measuredRect.Height - last.H;
 
             // Confidence Calculation
             double velConf = last.dX == 0 ? 1.0 : 1.0 - Math.Min(1.0, Math.Abs((curDX - last.dX) / (last.dX + 0.1)));
             double sizeConf = last.W == 0 ? 1.0 : 1.0 - Math.Min(1.0, Math.Abs((measuredRect.Width - last.W) / last.W));
             double currentFrameConf = (velConf + sizeConf) / 2.0;
-            double finalConf = (last.Confidence * cfg.ConfidenceWeight) + (currentFrameConf * (1 - cfg.ConfidenceWeight));
+            double finalConf = last.IsManual ? currentFrameConf : (last.Confidence * cfg.ConfidenceWeight) + (currentFrameConf * (1 - cfg.ConfidenceWeight));
 
             // --- STEP 5: INTEGRATE PREDICTION ---
             // integration of prediction with measurements
@@ -428,7 +438,7 @@ namespace PITrackerCore
         public int MaxROI { get; set; } = 150;
         public int MinObjSize { get; set; } = 2;
         public int MaxObjSize { get; set; } = 300;
-        public int HistogramSmoothingWindow { get; set; } = 1;
+        public int HistogramSmoothingWindow { get; set; } = 3;
         
         // Mixing Weights (0.0 to 1.0)
         public float ThresholdWeight { get; set; } = 0.7f; // How much to keep the old threshold
